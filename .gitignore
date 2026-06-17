@@ -1,0 +1,41 @@
+# ============ Python ============
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# ============ OS / editor ============
+.DS_Store
+*.swp
+~$*
+
+# ============ Logs / build artifacts / backups ============
+*.log
+*.aux
+*.out
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.bak
+*.bak_*
+
+# ============ Trained checkpoints (large) ============
+*.pt
+
+# ================================================================
+# NOT part of this code+results release (kept local)
+# ================================================================
+
+# Manuscript, paper-building scripts, and LaTeX — released on acceptance
+allpaper/
+*.pdf
+*.docx
+
+# Licensed public benchmarks — not redistributed; fetch via download_datasets.py
+data/
+datasets/
+
+# Working drafts / archives
+noable/

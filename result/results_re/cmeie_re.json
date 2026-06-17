@@ -1,0 +1,23 @@
+{
+  "kind": "re_grid",
+  "config": {
+    "modes": "none,implicit,explicit",
+    "fracs": "0.1",
+    "seeds": "42",
+    "train_cap": 150,
+    "epochs": 5,
+    "gnn_depth": 2,
+    "amp": false
+  },
+  "results": {
+    "0.1|none": [
+      0.07712983522262475
+    ],
+    "0.1|implicit": [
+      0.07712983522262475
+    ],
+    "0.1|explicit": [
+      0.06574441857279824
+    ]
+  }
+}

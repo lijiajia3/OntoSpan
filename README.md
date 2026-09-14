@@ -1,126 +1,150 @@
 # OntoSpan
 
-**Signed ontology constraints for low-resource Chinese NER.**
+**Dual-layer signed ontology constraints for low-resource Chinese named entity recognition.**
 
-OntoSpan is a span-based Chinese named-entity recognizer that treats ontology
-relations as *polarity-aware* constraints on a two-layer signed graph:
-semantically compatible relations are smoothed, while **mutually exclusive
-(mutex)** relations are *anti-smoothed* toward antipodal separation, under a
-single signed-Laplacian objective. The mutex constraints come from
-authoritative external sources (pharmacopoeial incompatibility lists, statutory
-role exclusivity), not from benchmark labels.
+OntoSpan is a span-based NER framework for testing whether documented exclusion
+knowledge changes predictions in specialized Chinese domains. It represents
+compatible and mutually exclusive relations on a two-layer signed graph: a
+type layer for label-level relations and an instance layer for domain concepts.
+The current study covers legal text, Traditional Chinese Medicine (TCM), and
+medical NER.
 
-This repository contains the **experiment code and result files** for the
-study. The manuscript and the licensed benchmark corpora are not included
-(see *Data* and *Scope* below).
+This repository contains the experiment code and result artifacts. The
+licensed benchmark texts and the manuscript are not redistributed.
 
-## Key finding: a decision-axis principle (and its boundary)
+## Revision experiment status
 
-The value of an exclusion prior is governed by whether the mutex lies on the
-entity-typing decision axis — and, crucially, the prior is a **low-resource
-specialist**: it complements supervision only while labels are scarce.
+The reviewer-driven experiment suite is complete: **174/174 planned
+configurations**, with no missing or invalid runs. Every reported cell uses the
+same frozen data policy and three seeds (`42`, `1`, and `2`). The 47
+prespecified paired comparisons were analyzed jointly with text-cluster
+bootstrap confidence intervals, paired randomization tests, and Holm
+correction.
 
-- **Type-level** exclusivity (e.g. legal *suspect* ⊥ *victim*) lies on that
-  axis. Its gain *grows across the low-resource budget*, reaching **+4.4 F1**
-  at the 600-sentence cap on legal NER (positive across all seeds), and a
-  perturbation control ties it to the specific exclusion edge (`real` >
-  `rewired` > `removed`). On the **full uncapped corpus** (4,198 sentences,
-  ~7× the budget) the gain **vanishes** (explicit 0.594 vs. none 0.597), so the
-  benefit is a *genuine low-resource effect, not an artifact* — wider-windowed
-  and larger than the instance-level prior, but not a universal improvement.
-- **Instance-level** mutex (e.g. contraindicated herb/drug pairs) is orthogonal
-  to type decisions: it helps only under extreme scarcity (where on medical NER
-  it beats biaffine, global-pointer, W2NER, and a collapsing BERT-CRF) and is
-  otherwise absorbed by supervision.
-- The signed objective provably induces the predicted antipodal geometry
-  (mutex-pair cosine **−0.64 to −0.99**, vs. +0.85 under the raw encoder:
-  induced, not inherited).
+The expanded evidence does **not** support a universal low-resource gain. The
+effect depends on domain, supervision budget, graph construction, and encoder.
+For the capped study, training sizes are 60, 180, and 600 sentences; development
+and fixed gold evaluation sets contain 100 and 300 sentences, respectively.
+
+| Domain | 60 sentences | 180 sentences | 600 sentences |
+|---|---:|---:|---:|
+| TCMNER | +0.160 | -0.638 | +2.987 |
+| CAIL | -2.307 | -2.807 | +2.991 |
+| CMeEE | +0.381 | +2.090 | +0.817 |
+
+Values are explicit-minus-no-ontology changes in span-level micro-F1 points,
+averaged over three seeds. Uncertainty and adjusted p-values are reported in
+[`result/revision_20260914/STATISTICS.json`](result/revision_20260914/STATISTICS.json).
+
+### Reviewer-requested additions
+
+- **Random-sign control.** Graph topology and positive/negative edge counts are
+  held fixed while sign identities are shuffled. Random signs outperformed the
+  documented signs in the tested legal cell and also had a higher medical mean,
+  so the gains cannot be attributed uniquely to the semantic identity of the
+  supplied signs.
+- **Signed-GNN baselines.** SGCN and SiGAT were adapted to the same ontology
+  graph, encoder, span scorer, data, and seed protocol. They were competitive
+  with or stronger than OntoSpan in the tested cells.
+- **Second Chinese backbone.** With Chinese RoBERTa-wwm-ext, the positive legal
+  MacBERT mean did not transfer; the medical difference was positive but did not
+  survive the joint correction.
+- **Sensitivity analysis.** The implicit realization was prediction-invariant
+  for `lambda` in `{0, 0.05, 0.1, 0.5, 1.0}`. The explicit negative-edge weight
+  sweep was non-monotonic and did not reveal a stable alternative optimum.
+- **Uncapped training.** Three-seed comparisons were added for medical and TCM
+  alongside the existing legal full-corpus check. The medical difference was
+  +0.110 F1 points; the TCM mean difference was +0.664 points but varied
+  substantially across seeds.
+- **Type-level control.** An exploratory TCM cause-versus-symptom type edge was
+  added to probe the decision-axis hypothesis. It is a constructed control, not
+  a second natural type-level ontology benchmark.
+- **Cost and uncertainty.** Training time, per-seed variation, paired confidence
+  intervals, raw p-values, and Holm-adjusted p-values are retained even when
+  they weaken the original interpretation.
+
+The implicit signed-Laplacian objective is retained as a geometric diagnostic:
+under a separate high-learning-rate probe it moved mutex pairs toward
+antipodal geometry, but it did not change task predictions under the tested
+training protocol. That probe is not treated as an explanation of the explicit
+model's task-level F1 changes.
+
+## Result artifacts
+
+The final revision evidence is under
+[`result/revision_20260914/`](result/revision_20260914/):
+
+- `MANIFEST.json` — the exact 174-job configuration manifest;
+- `SUMMARY.json` — per-run metrics, per-type scores, data/graph audits, and
+  training times, without benchmark text;
+- `STATISTICS.json` — all 47 prespecified paired comparisons, confidence
+  intervals, raw p-values, and Holm-adjusted p-values;
+- `README.md` — a compact guide to the released evidence and its limitations.
+
+Earlier result directories are retained for provenance. Use the dated revision
+directory for the current paper numbers.
 
 ## Repository layout
 
-```
-build_datasets.py        Entity dictionaries + signed ontology
-                         (mutex / attractive edges, per domain)
-run.py                   Unified entry point (law-small / law-full /
-                         medical-full / all)
-run_code/                Core library
-  ontospan_experiment.py   Model (SignedGAT), training, evaluation
-  baselines.py             biaffine / global-pointer / BERT-CRF / W2NER
-  run_grid_safe.py         Subprocess-isolated grid driver (avoids OOM)
-  run_ablation.py          Section-style ablations
-  ontospan_re*.py          Relation-extraction transfer (CMeIE)
-  download_datasets.py     Fetch + convert the three benchmarks
-result/                  All results (read-only artifacts)
-  results_3seed/           Main table: TCM + medical, none/explicit, 3 seeds
-  results_law/             Legal NER (type-level mutex), capped budget, 3 seeds
-  results_law_full/        Legal NER on the full uncapped corpus (robustness)
-  results_baselines/       Four external baselines, per domain
-  results_p3_*/            Perturbation controls: real / rewired / removed
-                           (incl. legal type-level P3: law_paper.json)
-  results_re/              Relation-extraction negative-transfer control
-  results_tcm_biaosym_3seed/  Within-TCM type-mutex control (cause ⊥ symptom)
-  P1_cosine_implicit.json  Geometry: mutex-pair cosines (P1)
-  tcm_confusion.json       TCM type-confusion counts
-  figures/                 Publication figures (PDF / PNG / SVG)
+```text
+build_datasets.py               entity dictionaries and signed ontologies
+run_code/                       shared model, training, and evaluation code
+  ontospan_experiment.py        OntoSpan, random-sign control, SGCN, SiGAT
+  run_ablation.py               training and result serialization
+  run_grid_safe.py              isolated experiment-grid runner
+v16/Windows/                    frozen 174-configuration revision suite
+result/
+  revision_20260914/            final aggregate revision evidence
+  results_3seed/                earlier main medical/TCM results
+  results_law/                  earlier capped legal results
+  results_law_full/             earlier uncapped legal result
+  results_p3_*/                 real/rewired/removed perturbations
+  results_baselines/            traditional and LLM baselines
+  figures/                      publication figures in PNG/SVG
 ```
 
-### Experiment runner scripts (root)
+## Reproducing the final suite
 
-The runner scripts share one backbone, budget, and protocol so that
-comparisons reflect architecture rather than tuning. The `_4070` suffix only
-records that runs were performed on an RTX 4070; the scripts are CUDA-agnostic.
+The exact final 174-job protocol is frozen in `v16/Windows`. On a Windows CUDA
+machine:
 
-| Script | What it runs |
-|---|---|
-| `run_4070.py` | Main table (multi-seed) + perturbation (P3) + geometry (P1) |
-| `run_fast_4070.py` | Parallel grid driver (saturates one GPU) |
-| `run_baselines_4070.py` | The four external baselines (merge-writes per domain) |
-| `run_law_4070.py` | Legal NER — type-level mutex (CAIL), capped budget + P1 |
-| `run_law_p3.py` | Legal type-level P3 perturbation (real / rewired / removed) |
-| `run_law_full.py` | Legal NER on the full uncapped corpus (none vs explicit) |
-| `run_re_4070.py` | Relation-extraction transfer grid (CMeIE) |
-| `run_A_tcm.py` | TCM ablation: routing instance anchors into scoring |
-| `run_A2_typemutex.py` | TCM with an on-axis type-level mutex (cause ⊥ symptom) |
-| `run_sensitivity_4070.py` | Hyper-parameter sensitivity (GNN depth; λ) |
-| `verify_p1_cosine.py` | Geometry check: mutex-pair representation cosine (P1) |
-| `tcm_confusion.py` | TCM type-confusion matrix |
-| `baseline_llm_deepseek.py` | Few-shot LLM baseline (DeepSeek; API, no GPU) |
-| `collect_results.py` | Bundle `result/` artifacts into a zip |
+```powershell
+cd v16\Windows
+python 01_SETUP_WINDOWS.py
+python 02_CHECK_ENVIRONMENT.py
+python 06_ALL_174.py
+python 07_SUMMARIZE.py
+```
 
-## Reproducing
+The launcher validates code, model, configuration, and data fingerprints before
+reusing a completed job. It stores model weights locally but excludes them from
+the summary archive. The core modules in `run_code/` remain platform-neutral
+and can also be invoked through the earlier root runners.
+
+Developer tests for the frozen suite can be run without training the full grid:
 
 ```bash
-pip install -r requirements.txt
-# 1) fetch the benchmarks into data/<domain>/ (see run_code/download_datasets.py)
-python run_code/download_datasets.py
-# 2) main grid + perturbation + geometry
-python run_4070.py
-# 3) external baselines (same backbone / budget)
-python run_baselines_4070.py
-# 4) legal type-level experiment (capped) + P3 + full-corpus robustness
-python run_law_4070.py
-python run_law_p3.py
-python run_law_full.py
+python -m unittest discover -s v16/Windows -p "test_*.py" -v
 ```
 
-Results are written under `result/`; `run_code/RESULTS_README.md` describes
-which directory is the source of each table.
+## Data and evaluation
 
-## Data
+The experiments use the public TCMNER, CMeEE/CBLUE, CMeIE/CBLUE, and CAIL
+benchmarks under their respective licenses. Benchmark texts are not committed;
+obtain them from their official sources and place them under `data/` as
+described in `run_code/download_datasets.py`.
 
-All experiments use **public** Chinese benchmarks — TCMNER, CMeEE and CMeIE
-(CBLUE), and the CAIL legal information-extraction task — under their
-respective licences. These corpora are **not redistributed here**; obtain them
-from their official sources and place them under `data/`. The external ontology
-resources (incompatibility lists, statutory role-exclusivity pairs) are
-compiled from publicly citable sources and built in `build_datasets.py`.
+NER scores use exact-match span-level micro precision, recall, and F1. CMeEE is
+evaluated on the fixed gold split used by this study; it is distinct from the
+hidden CBLUE leaderboard test, and no direct leaderboard comparison is made.
 
 ## Scope
 
-This repository releases the **code and result artifacts**; the manuscript is
-under peer review and is omitted here. All code and experimental results are
-public.
+This release supports reproduction and audit of the reported experiments. It
+does not establish that signed ontology constraints improve every domain,
+budget, graph, or encoder. The negative and null outcomes are part of the
+release rather than filtered out.
 
 ## License
 
-Released under the MIT License (see `LICENSE`).
+Released under the MIT License. See [`LICENSE`](LICENSE).

@@ -51,6 +51,12 @@ def load_ontology(domain):
 
 
 def perturb_ontology(onto, kind="real", seed=0):
+    if kind == "random_sign":
+        # Keep every node and edge fixed; the model shuffles which graph edges
+        # are negative while preserving the original negative-edge count.
+        o = dict(onto)
+        o["_random_sign_seed"] = int(seed)
+        return o
     if kind not in ("removed", "rewired"):
         return onto
     o = dict(onto)
@@ -163,23 +169,144 @@ class SignedGAT(nn.Module):
             out[i] = (a.unsqueeze(1) * Wx[jt]).sum(0)
         return out
 
-    def forward(self, x, pos_nbr, neg_nbr):
+    def forward(self, x, pos_nbr, neg_nbr, neg_weight=1.0):
         for _ in range(self.depth):
             Wx = self.W(x)
             # Message = attractive aggregation minus mutex aggregation (the signed step).
             pos = self._aggregate(x, Wx, pos_nbr, self.a_pos)
             neg = self._aggregate(x, Wx, neg_nbr, self.a_neg)
-            agg = pos - neg
+            agg = pos - float(neg_weight) * neg
             g = torch.sigmoid(self.gate(torch.cat([x, agg], dim=1)))
             x = self.ln(g * agg + (1 - g) * x)
         return x
+
+
+def _neighbor_mean(x, nbr):
+    """Mean neighbor features for a small adjacency list."""
+    out = torch.zeros_like(x)
+    for i, js in enumerate(nbr):
+        if js:
+            out[i] = x[torch.tensor(js, device=x.device)].mean(0)
+    return out
+
+
+class SignedGCN(nn.Module):
+    """Balance-theory SGCN adapted to return one prototype per ontology node.
+
+    The two channels represent balanced and unbalanced paths.  The first layer
+    separates positive and negative neighborhoods; later layers mix
+    positive-balanced with negative-unbalanced paths, and vice versa, following
+    Derr et al. (ICDM 2018).  A final projection restores the NER prototype size.
+    """
+    def __init__(self, d, depth=2):
+        super().__init__()
+        self.depth = max(1, int(depth))
+        h = max(1, d // 2)
+        self.first_bal = nn.Linear(2 * d, h)
+        self.first_unbal = nn.Linear(2 * d, h)
+        self.bal = nn.ModuleList(nn.Linear(3 * h, h) for _ in range(self.depth - 1))
+        self.unbal = nn.ModuleList(nn.Linear(3 * h, h) for _ in range(self.depth - 1))
+        self.out = nn.Linear(2 * h, d)
+        self.norm = nn.LayerNorm(d)
+
+    def forward(self, x, pos_nbr, neg_nbr, neg_weight=1.0):
+        p = _neighbor_mean(x, pos_nbr)
+        n = float(neg_weight) * _neighbor_mean(x, neg_nbr)
+        b = F.gelu(self.first_bal(torch.cat([x, p], 1)))
+        u = F.gelu(self.first_unbal(torch.cat([x, n], 1)))
+        for wb, wu in zip(self.bal, self.unbal):
+            b_new = F.gelu(wb(torch.cat([
+                b, _neighbor_mean(b, pos_nbr),
+                float(neg_weight) * _neighbor_mean(u, neg_nbr)], 1)))
+            u_new = F.gelu(wu(torch.cat([
+                u, _neighbor_mean(u, pos_nbr),
+                float(neg_weight) * _neighbor_mean(b, neg_nbr)], 1)))
+            b, u = b_new, u_new
+        return self.norm(self.out(torch.cat([b, u], 1)))
+
+
+class _MotifAttention(nn.Module):
+    def __init__(self, d, q):
+        super().__init__()
+        self.proj = nn.Linear(d, q, bias=False)
+        self.attn = nn.Linear(2 * q, 1, bias=False)
+
+    def forward(self, x, nbr):
+        z = self.proj(x)
+        out = torch.zeros_like(z)
+        for i, js in enumerate(nbr):
+            nodes = list(dict.fromkeys([i] + list(js)))
+            jt = torch.tensor(nodes, device=x.device)
+            e = F.leaky_relu(self.attn(torch.cat([
+                z[i].expand(len(nodes), -1), z[jt]], 1)).squeeze(1), 0.1)
+            a = torch.softmax(e, 0)
+            out[i] = (a.unsqueeze(1) * z[jt]).sum(0)
+        return out
+
+
+def _sigat_channels(pos_nbr, neg_nbr):
+    """Build SiGAT's 6 signed-direction channels and 32 triad motifs.
+
+    OntoSpan's ontology edges are undirected, so each edge is expanded in both
+    directions before the signed directed motif construction.
+    """
+    n = len(pos_nbr)
+    p_out = [set(v) for v in pos_nbr]; p_in = [set(v) for v in pos_nbr]
+    n_out = [set(v) for v in neg_nbr]; n_in = [set(v) for v in neg_nbr]
+    p_all = [p_out[i] | p_in[i] for i in range(n)]
+    n_all = [n_out[i] | n_in[i] for i in range(n)]
+    channels = [[sorted(v) for v in xs] for xs in
+                (p_all, p_out, p_in, n_all, n_out, n_in)]
+    motifs = [[[ ] for _ in range(n)] for _ in range(32)]
+
+    def features(u, v):
+        return (
+            len(p_out[u] & p_in[v]), len(p_out[u] & n_in[v]),
+            len(n_out[u] & p_in[v]), len(n_out[u] & n_in[v]),
+            len(p_out[u] & p_out[v]), len(p_out[u] & n_out[v]),
+            len(n_out[u] & p_out[v]), len(n_out[u] & n_out[v]),
+            len(p_in[u] & p_out[v]), len(p_in[u] & n_out[v]),
+            len(n_in[u] & p_out[v]), len(n_in[u] & n_out[v]),
+            len(p_in[u] & p_in[v]), len(p_in[u] & n_in[v]),
+            len(n_in[u] & p_in[v]), len(n_in[u] & n_in[v]))
+
+    for u in range(n):
+        for v in p_out[u]:
+            for k, value in enumerate(features(u, v)):
+                if value > 0: motifs[k][u].append(v)
+        for v in n_out[u]:
+            for k, value in enumerate(features(u, v)):
+                if value > 0: motifs[16 + k][u].append(v)
+    return channels + motifs
+
+
+class SiGAT(nn.Module):
+    """Motif-attention SiGAT adaptation for the small ontology graph.
+
+    It retains the original 38 channels (six signed/direction channels and 32
+    signed triad-motif channels), then projects their attended features back to
+    the prototype dimension used by the shared NER scorer.
+    """
+    def __init__(self, d, depth=1, motif_dim=32):
+        super().__init__()
+        q = min(int(motif_dim), d)
+        self.heads = nn.ModuleList(_MotifAttention(d, q) for _ in range(38))
+        self.mlp = nn.Sequential(nn.Linear(d + 38 * q, d), nn.Tanh(), nn.Linear(d, d))
+        self.norm = nn.LayerNorm(d)
+        self._channels = None
+
+    def forward(self, x, pos_nbr, neg_nbr, neg_weight=1.0):
+        if self._channels is None:
+            self._channels = _sigat_channels(pos_nbr, neg_nbr)
+        hs = [head(x, nbr) for head, nbr in zip(self.heads, self._channels)]
+        return self.norm(self.mlp(torch.cat([x] + hs, 1)))
 
 
 # Span-based NER over a two-layer signed ontology graph (type layer + concept
 # anchors). mode = none / implicit (regularizer) / explicit (SignedGAT).
 class OntoSpan(nn.Module):
     def __init__(self, encoder, types, ontology, mode="implicit", lmax=10, dwidth=64, gnn_depth=1,
-                 score_anchors=False):
+                 score_anchors=False, me_weight=1.0):
         super().__init__()
         self.score_anchors = bool(score_anchors) and mode == "explicit"
         self._anchor_reps = None
@@ -189,6 +316,7 @@ class OntoSpan(nn.Module):
         self.K = len(types)
         self.lmax = lmax
         self.mode = mode
+        self.me_weight = float(me_weight)
         d = encoder.hidden
         self.width_emb = nn.Embedding(lmax + 1, dwidth)
         self.span_proj = nn.Sequential(nn.Linear(3 * d + dwidth, d), nn.LayerNorm(d), nn.GELU())
@@ -196,7 +324,14 @@ class OntoSpan(nn.Module):
         self.Wbi = nn.Parameter(torch.empty(d, d)); nn.init.xavier_uniform_(self.Wbi)
         self.type_bias = nn.Parameter(torch.zeros(self.K))
         self._build_graph(ontology, encoder, d)
-        self.gnn = SignedGAT(d, depth=gnn_depth) if mode == "explicit" else None
+        if mode == "explicit":
+            self.gnn = SignedGAT(d, depth=gnn_depth)
+        elif mode == "sgcn":
+            self.gnn = SignedGCN(d, depth=gnn_depth)
+        elif mode == "sigat":
+            self.gnn = SiGAT(d, depth=gnn_depth)
+        else:
+            self.gnn = None
 
     # Build positive (attractive) and negative (mutex) neighbor lists over type
     # nodes (0..K-1) and concept anchors (K..K+M-1); is-a links each anchor to its
@@ -208,7 +343,7 @@ class OntoSpan(nn.Module):
         names = sorted({n for pair in onto["imutex"] for n in pair})
         self.anchor_names = names
         self.M = len(names)
-        want_anchor = self.mode in ("implicit", "explicit") and self.M > 0
+        want_anchor = self.mode in ("implicit", "explicit", "sgcn", "sigat") and self.M > 0
         if want_anchor:
             self.anchor = nn.Parameter(torch.stack([encoder.embed_text_static(n) for n in names]))
             a2i = {n: i for i, n in enumerate(names)}
@@ -221,34 +356,72 @@ class OntoSpan(nn.Module):
         self.pos_nbr = [[] for _ in range(N)]
         self.neg_nbr = [[] for _ in range(N)]
         def add(adj, i, j): adj[i].append(j); adj[j].append(i)
-        for a, b, _w in self.type_attract: add(self.pos_nbr, a, b)
-        for a, b in self.type_mutex:       add(self.neg_nbr, a, b)
+        pos_edges = [(a, b) for a, b, _w in self.type_attract]
+        neg_edges = list(self.type_mutex)
         if want_anchor:
-            for a, b in self.inst_mutex:   add(self.neg_nbr, self.K + a, self.K + b)
+            neg_edges += [(self.K + a, self.K + b) for a, b in self.inst_mutex]
             if self.parent_idx is not None:
-                for m in range(self.M):    add(self.pos_nbr, self.K + m, self.parent_idx)
+                pos_edges += [(self.K + m, self.parent_idx) for m in range(self.M)]
+        if "_random_sign_seed" in onto:
+            all_edges = list(dict.fromkeys(
+                tuple(sorted(e)) for e in (pos_edges + neg_edges) if e[0] != e[1]))
+            rng = random.Random(int(onto["_random_sign_seed"]))
+            rng.shuffle(all_edges)
+            n_neg = min(len(neg_edges), len(all_edges))
+            neg_edges, pos_edges = all_edges[:n_neg], all_edges[n_neg:]
+        for a, b in pos_edges: add(self.pos_nbr, a, b)
+        for a, b in neg_edges: add(self.neg_nbr, a, b)
 
     def type_representations(self):
-        if self.mode == "explicit":
+        if self.mode in ("explicit", "sgcn", "sigat"):
             x = (torch.cat([self.type_emb.weight, self.anchor], 0)
                  if self.anchor is not None else self.type_emb.weight)
-            h = self.gnn(x, self.pos_nbr, self.neg_nbr)
+            h = self.gnn(x, self.pos_nbr, self.neg_nbr, self.me_weight)
             self._anchor_reps = h[self.K:] if (self.score_anchors and self.anchor is not None) else None
             return h[:self.K]
         self._anchor_reps = None
         return self.type_emb.weight
 
+    def span_index(self, length, device="cpu"):
+        """Enumerate candidates in the original start-major, short-to-long order."""
+        if length <= 0:
+            empty = torch.empty(0, dtype=torch.long, device=device)
+            return empty, empty, empty
+        starts = torch.arange(length, dtype=torch.long, device=device).unsqueeze(1)
+        widths = torch.arange(1, self.lmax + 1, dtype=torch.long,
+                              device=device).unsqueeze(0)
+        starts = starts.expand(length, self.lmax)
+        widths = widths.expand(length, self.lmax)
+        ends = starts + widths - 1
+        valid = ends < length
+        return starts[valid], ends[valid], widths[valid]
+
+    @staticmethod
+    def span_char_spans(offs, starts, ends):
+        """Map token candidates to character offsets without tensor kernels."""
+        si = starts.detach().cpu().tolist()
+        sj = ends.detach().cpu().tolist()
+        return [(offs[i][0], offs[j][1]) for i, j in zip(si, sj)]
+
+    def span_feats(self, reps, starts, ends, widths):
+        """Project only the requested candidates; means use FP32 prefix sums."""
+        if starts.numel() == 0:
+            return reps.new_zeros((0, self.encoder.hidden))
+        starts = starts.to(reps.device)
+        ends = ends.to(reps.device)
+        widths = widths.to(reps.device)
+        accum = reps.float() if reps.dtype in (torch.float16, torch.bfloat16) else reps
+        prefix = torch.cat([accum.new_zeros((1, accum.size(1))), accum.cumsum(0)], 0)
+        means = (prefix[ends + 1] - prefix[starts]) / widths.to(accum.dtype).unsqueeze(1)
+        means = means.to(reps.dtype)
+        feats = torch.cat([reps[starts], reps[ends], means, self.width_emb(widths)], 1)
+        return self.span_proj(feats)
+
     def span_reps(self, reps, offs):
-        T = reps.size(0)
-        feats, char_spans = [], []
-        for i in range(T):
-            for j in range(i, min(i + self.lmax, T)):
-                mean = reps[i:j + 1].mean(0)
-                feats.append(torch.cat([reps[i], reps[j], mean, self.width_emb.weight[j - i + 1]]))
-                char_spans.append((offs[i][0], offs[j][1]))
-        if not feats:
-            return torch.zeros(0, self.encoder.hidden, device=reps.device), []
-        return self.span_proj(torch.stack(feats)), char_spans
+        """Vectorized all-candidate path used by evaluation/inference."""
+        starts, ends, widths = self.span_index(reps.size(0), "cpu")
+        char_spans = self.span_char_spans(offs, starts, ends)
+        return self.span_feats(reps, starts, ends, widths), char_spans
 
     # Bilinear span-vs-type score; optionally lifts the parent-type score with the
     # best matching concept anchor (the score-anchors ablation).
@@ -276,12 +449,12 @@ class OntoSpan(nn.Module):
         for a, b, w in self.type_attract:
             reg = reg + w * (E[a] - E[b]).pow(2).sum()
         for a, b in self.type_mutex:
-            reg = reg + W_MUTEX * (E[a] + E[b]).pow(2).sum()
+            reg = reg + self.me_weight * (E[a] + E[b]).pow(2).sum()
         if self.anchor is not None:
             C = F.normalize(self.anchor, dim=1)
             inst = torch.zeros((), device=E.device)
             for a, b in self.inst_mutex:
-                inst = inst + W_MUTEX * (C[a] + C[b]).pow(2).sum()
+                inst = inst + self.me_weight * (C[a] + C[b]).pow(2).sum()
             if self.parent_idx is not None:
                 inst = inst + W_ISA * (C - E[self.parent_idx]).pow(2).sum(1).mean()
             reg = reg + gamma * inst
@@ -347,14 +520,19 @@ def run_epoch(model, data, optim, device, rho=5, lam=0.1, gamma=1.0, bs=8, scale
             treps = model.type_representations()
             logits_all, y_all = [], []
             for (text, gold), reps, offs in zip(batch, reps_list, offs_list):
-                sr, cspans = model.span_reps(reps, offs)
-                if sr.size(0) == 0: continue
+                starts, ends, widths = model.span_index(reps.size(0), "cpu")
+                if starts.numel() == 0: continue
+                cspans = model.span_char_spans(offs, starts, ends)
                 y = gold_token_spans(cspans, gold, model.t2i).to(device)
                 pos = (y != 0).nonzero(as_tuple=True)[0]
                 neg = (y == 0).nonzero(as_tuple=True)[0]
                 keep = neg[torch.randperm(len(neg), device=device)[:max(1, int(rho * max(1, len(pos))))]]
                 sel = torch.cat([pos, keep])
-                logits_all.append(model.score_with(sr[sel], treps)); y_all.append(y[sel])
+                starts = starts.to(reps.device, non_blocking=True)
+                ends = ends.to(reps.device, non_blocking=True)
+                widths = widths.to(reps.device, non_blocking=True)
+                sr = model.span_feats(reps, starts[sel], ends[sel], widths[sel])
+                logits_all.append(model.score_with(sr, treps)); y_all.append(y[sel])
             loss = None
             if logits_all:
                 loss = F.cross_entropy(torch.cat(logits_all), torch.cat(y_all), weight=cew)
@@ -378,15 +556,15 @@ def run_epoch(model, data, optim, device, rho=5, lam=0.1, gamma=1.0, bs=8, scale
 
 
 @torch.no_grad()
-def evaluate(model, data, device, bs=8, use_amp=False):
+def evaluate(model, data, device, bs=8, use_amp=False, return_details=False):
     model.eval()
-    tp = fp = fn = 0; per = {}
+    tp = fp = fn = 0; per = {}; details = []
     for k in range(0, len(data), bs):
         batch = data[k:k + bs]
         with torch.autocast(device_type="cuda", enabled=use_amp):
             reps_list, offs_list = model.encoder([t for t, _ in batch])
             treps = model.type_representations()
-        for (text, gold), reps, offs in zip(batch, reps_list, offs_list):
+        for local_i, ((text, gold), reps, offs) in enumerate(zip(batch, reps_list, offs_list)):
             sr, cspans = model.span_reps(reps, offs)
             gold_set = {(cs, ce, lab) for cs, ce, lab in gold}
             pred_set = set()
@@ -402,19 +580,27 @@ def evaluate(model, data, device, bs=8, use_amp=False):
             for key in gold_set:
                 per.setdefault(key[2], [0, 0, 0])
                 if key not in pred_set: fn += 1; per[key[2]][2] += 1
+            if return_details:
+                details.append({"sample_index": k + local_i,
+                                "gold": [list(v) for v in sorted(gold_set)],
+                                "pred": [list(v) for v in sorted(pred_set)]})
     def prf(t, p_, n_):
         p = t / (t + p_) if t + p_ else 0.0; r = t / (t + n_) if t + n_ else 0.0
         return p, r, (2 * p * r / (p + r) if p + r else 0.0)
     P, R, Fm = prf(tp, fp, fn)
-    return {"micro": (P, R, Fm), "tp": tp, "fp": fp, "fn": fn,
-            "per_type": {l: prf(*v) for l, v in sorted(per.items())}}
+    out = {"micro": (P, R, Fm), "tp": tp, "fp": fp, "fn": fn,
+           "per_type": {l: prf(*v) for l, v in sorted(per.items())}}
+    if return_details:
+        out["predictions"] = details
+    return out
 
 
-def make_model(encoder_factory, types, onto, mode, lmax, device, gnn_depth=1, score_anchors=False):
+def make_model(encoder_factory, types, onto, mode, lmax, device, gnn_depth=1,
+               score_anchors=False, me_weight=1.0):
     enc = encoder_factory()
     if hasattr(enc, "model"): enc = enc.to(device)
     model = OntoSpan(enc, types, onto, mode=mode, lmax=lmax, gnn_depth=gnn_depth,
-                     score_anchors=score_anchors).to(device)
+                     score_anchors=score_anchors, me_weight=me_weight).to(device)
     return model
 
 
@@ -427,7 +613,9 @@ def train_eval_once(encoder_factory, types, onto, mode, frac, seed,
     idx = list(range(len(train))); random.shuffle(idx)
     sub = [train[i] for i in idx[:n]]
     model = make_model(encoder_factory, types, onto, mode, args.lmax, device,
-                       gnn_depth=getattr(args, "gnn_depth", 1))
+                       gnn_depth=getattr(args, "gnn_depth", 1),
+                       score_anchors=getattr(args, "score_anchors", False),
+                       me_weight=getattr(args, "me_weight", 1.0))
     optim = torch.optim.AdamW(model.parameters(), lr=args.lr)
     use_amp = getattr(args, "amp", False) and str(device) == "cuda"
     scaler = torch.amp.GradScaler("cuda", enabled=use_amp) if use_amp else None
@@ -492,7 +680,8 @@ def main():
     ap.add_argument("--domain", choices=["law", "tcm", "medical"])
     ap.add_argument("--data-root", default=os.path.join(_ROOT, "data"))
     ap.add_argument("--encoder", default="hfl/chinese-macbert-base")
-    ap.add_argument("--ontology", default="implicit", help="none|implicit|explicit|all (comma list ok)")
+    ap.add_argument("--ontology", default="implicit",
+                    help="none|implicit|explicit|sgcn|sigat|all (comma list ok)")
     ap.add_argument("--seeds", default="42", help="comma-separated, e.g. 42,1,2")
     ap.add_argument("--train-fracs", default="1.0", help="comma-separated low-resource fractions, e.g. 0.1,0.2,1.0")
     ap.add_argument("--epochs", type=int, default=5)
@@ -513,8 +702,10 @@ def main():
                     help="char random-masking probability (training set only; 0 = off)")
     ap.add_argument("--ckpt-dir", default=None,
                     help="if set, save best-dev .pt weights for each run to this directory")
-    ap.add_argument("--mutex-perturb", choices=["real", "rewired", "removed"], default="real",
+    ap.add_argument("--mutex-perturb", choices=["real", "rewired", "removed", "random_sign"], default="real",
                     help="P3 control: real / rewired (difficulty-matched) / removed")
+    ap.add_argument("--me-weight", type=float, default=1.0,
+                    help="negative-message/implicit-ME weight")
     ap.add_argument("--smoke", action="store_true")
     a = ap.parse_args()
 

@@ -1,0 +1,7 @@
+{
+  "batch_size": 8,
+  "accum": 1,
+  "memory_limit_gib": 8.0,
+  "fast_spans": true,
+  "bootstrap_replicates": 2000
+}

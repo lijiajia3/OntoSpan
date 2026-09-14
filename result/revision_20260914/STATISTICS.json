@@ -1,0 +1,946 @@
+{
+  "comparisons": [
+    {
+      "delta": 0.00380657066007802,
+      "ci95": [
+        -0.000976131335398921,
+        0.008636392043817873
+      ],
+      "p_randomization": 0.13793103448275862,
+      "per_seed_delta": [
+        0.005403587044503985,
+        -0.0011776712333511352,
+        0.00719379616908121
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "main/medical/0.1",
+      "p_holm": 1.0
+    },
+    {
+      "delta": 0.0209049951366371,
+      "ci95": [
+        0.01656888153075149,
+        0.0253472577069961
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.04054182131290998,
+        0.0014348694833503928,
+        0.020738294613650926
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "main/medical/0.3",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.008169459667206197,
+      "ci95": [
+        0.001149048805299533,
+        0.015061160623402898
+      ],
+      "p_randomization": 0.025487256371814093,
+      "per_seed_delta": [
+        0.01679268917207591,
+        -0.03043257252646009,
+        0.03814826235600277
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "main/medical/1.0",
+      "p_holm": 0.4332833583208396
+    },
+    {
+      "delta": 0.0015966931309595496,
+      "ci95": [
+        -0.005426300431636061,
+        0.008710963848428776
+      ],
+      "p_randomization": 0.670664667666167,
+      "per_seed_delta": [
+        0.09033379629978622,
+        -0.06358463611641466,
+        -0.021959080790492913
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "main/tcm/0.1",
+      "p_holm": 1.0
+    },
+    {
+      "delta": -0.006375197859011518,
+      "ci95": [
+        -0.011336215061008835,
+        -0.0010967672791988758
+      ],
+      "p_randomization": 0.017991004497751123,
+      "per_seed_delta": [
+        -0.005654870372199361,
+        -0.05707632145772279,
+        0.043605598252887595
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "main/tcm/0.3",
+      "p_holm": 0.3238380809595202
+    },
+    {
+      "delta": 0.02986858549417981,
+      "ci95": [
+        0.02462271544986471,
+        0.03537770394927651
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.09200442459513142,
+        -0.019039118480999984,
+        0.016640450368408
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "main/tcm/1.0",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": -0.02307346550805033,
+      "ci95": [
+        -0.028238806460823714,
+        -0.01825253769694397
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        -0.044386951065379404,
+        -0.015545386317145304,
+        -0.009288059141626281
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "main/law/0.1",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": -0.028071867023685925,
+      "ci95": [
+        -0.03437828814753037,
+        -0.02151069758422354
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        -0.046851145038167924,
+        -0.10807102377675282,
+        0.07070656774386297
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "main/law/0.3",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.02990630068735008,
+      "ci95": [
+        0.023622483858772275,
+        0.03574995601404388
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        -0.009197493344991758,
+        0.09895440089902502,
+        -3.80054919830175e-05
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "main/law/1.0",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.006389681267950258,
+      "ci95": [
+        0.0030884992405821737,
+        0.009823347008136666
+      ],
+      "p_randomization": 0.0009995002498750624,
+      "per_seed_delta": [
+        -0.014026224977201782,
+        0.02217001072635301,
+        0.011025258054699547
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "p3/real-minus-removed/medical/0.1",
+      "p_holm": 0.02498750624687656
+    },
+    {
+      "delta": -0.0006635571841167401,
+      "ci95": [
+        -0.0014316995645830926,
+        1.8733609513359514e-05
+      ],
+      "p_randomization": 0.06746626686656672,
+      "per_seed_delta": [
+        -0.00030144116982991354,
+        -0.0017621395851124821,
+        7.290920259217515e-05
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "p3/real-minus-rewired/medical/0.1",
+      "p_holm": 1.0
+    },
+    {
+      "delta": -0.006404104544470972,
+      "ci95": [
+        -0.010966208537655,
+        -0.002012550297288905
+      ],
+      "p_randomization": 0.0074962518740629685,
+      "per_seed_delta": [
+        -0.0026384511821166134,
+        -0.03225633711182846,
+        0.01568247466053216
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "p3/real-minus-removed/medical/0.3",
+      "p_holm": 0.15742128935532235
+    },
+    {
+      "delta": -0.0002942164424824904,
+      "ci95": [
+        -0.0015735518486901907,
+        0.0010498940973649915
+      ],
+      "p_randomization": 0.6891554222888556,
+      "per_seed_delta": [
+        0.00036641172188120463,
+        -0.001001788551580396,
+        -0.00024727249774827986
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "p3/real-minus-rewired/medical/0.3",
+      "p_holm": 1.0
+    },
+    {
+      "delta": 0.013503358202613095,
+      "ci95": [
+        0.00840898424345218,
+        0.018566057582618214
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.06242316537606485,
+        -0.03494569398828434,
+        0.01303260322005878
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "p3/real-minus-removed/medical/1.0",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.013401742199942992,
+      "ci95": [
+        0.008449164927027021,
+        0.018129497255355856
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.03830720872149268,
+        -0.06084074883011514,
+        0.06273876670845144
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "p3/real-minus-rewired/medical/1.0",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.009298494825448839,
+      "ci95": [
+        0.006446933260877354,
+        0.012405141409090612
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.008961037747043488,
+        0.03863099591935926,
+        -0.01969654919005623
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "p3/real-minus-removed/tcm/0.1",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.0010246430564602265,
+      "ci95": [
+        0.0006110295135622418,
+        0.001402017108361662
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        -0.0010537447155863355,
+        0.0018855816442193973,
+        0.0022420922407476174
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "p3/real-minus-rewired/tcm/0.1",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.0023461509775038283,
+      "ci95": [
+        -0.004814023970494297,
+        0.009072267071087832
+      ],
+      "p_randomization": 0.5077461269365318,
+      "per_seed_delta": [
+        -0.017353746729836916,
+        0.011549927225727286,
+        0.012842272436621116
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "p3/real-minus-removed/law/1.0",
+      "p_holm": 1.0
+    },
+    {
+      "delta": 0.008877409309279475,
+      "ci95": [
+        0.0022307093433279936,
+        0.015400005617134805
+      ],
+      "p_randomization": 0.009495252373813094,
+      "per_seed_delta": [
+        -0.05027310409567304,
+        0.04417559346671873,
+        0.03272973855679273
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "p3/real-minus-rewired/law/1.0",
+      "p_holm": 0.18040979510244878
+    },
+    {
+      "delta": -0.006489428958627493,
+      "ci95": [
+        -0.010453349194494168,
+        -0.002674920192239203
+      ],
+      "p_randomization": 0.0024987506246876563,
+      "per_seed_delta": [
+        -0.024265752353648293,
+        -0.010995446875292608,
+        0.015792912353058422
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "random/real-minus-random/medical",
+      "p_holm": 0.0574712643678161
+    },
+    {
+      "delta": 0.007850687450284962,
+      "ci95": [
+        0.0023167213242639446,
+        0.013147045893569393
+      ],
+      "p_randomization": 0.0074962518740629685,
+      "per_seed_delta": [
+        0.01628262154456958,
+        0.0037300696063264083,
+        0.003539371199958896
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "backbone/medical",
+      "p_holm": 0.15742128935532235
+    },
+    {
+      "delta": -0.006129971823609155,
+      "ci95": [
+        -0.013521838763142025,
+        0.0012057595923802445
+      ],
+      "p_randomization": 0.09295352323838081,
+      "per_seed_delta": [
+        0.0035826502735948618,
+        -0.0003915503333782322,
+        -0.021581015411044097
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "signed/explicit-minus-sgcn/medical",
+      "p_holm": 1.0
+    },
+    {
+      "delta": -0.0016525423622061979,
+      "ci95": [
+        -0.009616217599458654,
+        0.005466050882610947
+      ],
+      "p_randomization": 0.6436781609195402,
+      "per_seed_delta": [
+        0.027333255917637717,
+        -0.026158717783025143,
+        -0.006132165221231167
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "signed/explicit-minus-sigat/medical",
+      "p_holm": 1.0
+    },
+    {
+      "delta": -0.024732455931893143,
+      "ci95": [
+        -0.031390630567246995,
+        -0.018183352306673
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        -0.04904076901124438,
+        -0.05272108365099237,
+        0.027564484866557326
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "random/real-minus-random/law",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": -0.023788745199558498,
+      "ci95": [
+        -0.03173701539205196,
+        -0.016517609702842957
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        -0.10820727173867123,
+        0.022058124350050834,
+        0.014782911789944897
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "backbone/law",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": -0.03846333822030257,
+      "ci95": [
+        -0.04599741167827152,
+        -0.030508080700050438
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        -0.09961735782896958,
+        -0.0076467979529527,
+        -0.008125858878985426
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "signed/explicit-minus-sgcn/law",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": -0.04847329327131833,
+      "ci95": [
+        -0.05616958046659814,
+        -0.041045730776166
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.01934286378240374,
+        -0.08401604551946712,
+        -0.08074669807689161
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "signed/explicit-minus-sigat/law",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": -0.0023461509775038283,
+      "ci95": [
+        -0.009072267071087834,
+        0.004814023970494291
+      ],
+      "p_randomization": 0.5077461269365318,
+      "per_seed_delta": [
+        0.017353746729836916,
+        -0.011549927225727286,
+        -0.012842272436621116
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "me_weight/0.0-minus-default",
+      "p_holm": 1.0
+    },
+    {
+      "delta": -0.013670465466852003,
+      "ci95": [
+        -0.022716036195489064,
+        -0.004282222852524018
+      ],
+      "p_randomization": 0.004497751124437781,
+      "per_seed_delta": [
+        -0.01294503054419699,
+        0.011271029457309956,
+        -0.03933739531366898
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "me_weight/0.25-minus-default",
+      "p_holm": 0.09895052473763118
+    },
+    {
+      "delta": 0.006530220767517081,
+      "ci95": [
+        -0.0010741326929048166,
+        0.01488557111112796
+      ],
+      "p_randomization": 0.13693153423288357,
+      "per_seed_delta": [
+        0.05689532141790432,
+        0.03258438715471301,
+        -0.06988904627006609
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "me_weight/0.5-minus-default",
+      "p_holm": 1.0
+    },
+    {
+      "delta": -0.0023545625192004094,
+      "ci95": [
+        -0.009949455419312938,
+        0.005226662204979791
+      ],
+      "p_randomization": 0.5372313843078461,
+      "per_seed_delta": [
+        0.04939151237778239,
+        -0.013775060483858903,
+        -0.04268013945152471
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "me_weight/2.0-minus-default",
+      "p_holm": 1.0
+    },
+    {
+      "delta": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "p_randomization": 1.0,
+      "per_seed_delta": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "lambda/0.05-minus-zero",
+      "p_holm": 1.0
+    },
+    {
+      "delta": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "p_randomization": 1.0,
+      "per_seed_delta": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "lambda/0.1-minus-zero",
+      "p_holm": 1.0
+    },
+    {
+      "delta": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "p_randomization": 1.0,
+      "per_seed_delta": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "lambda/0.5-minus-zero",
+      "p_holm": 1.0
+    },
+    {
+      "delta": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "p_randomization": 1.0,
+      "per_seed_delta": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "lambda/1.0-minus-zero",
+      "p_holm": 1.0
+    },
+    {
+      "delta": 0.0010963636147672446,
+      "ci95": [
+        -0.0004533030534467436,
+        0.002671339459199311
+      ],
+      "p_randomization": 0.17791104447776113,
+      "per_seed_delta": [
+        -0.01773735210660482,
+        0.023978075703294244,
+        -0.0029516327523876895
+      ],
+      "clusters": 2299,
+      "evaluation_rows": 2300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "uncapped/medical",
+      "p_holm": 1.0
+    },
+    {
+      "delta": 0.006642048247111269,
+      "ci95": [
+        0.004179676846662154,
+        0.009369724100824673
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        -0.03576887085459257,
+        0.003409863285094017,
+        0.05228515231083236
+      ],
+      "clusters": 1499,
+      "evaluation_rows": 1517,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "uncapped/tcm",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.019463583941551742,
+      "ci95": [
+        0.011776094282501785,
+        0.02765885826555459
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.11551603260208004,
+        -0.042829756708262556,
+        -0.014295524069162263
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "onaxis/minus-none/0.1",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.01786689081059219,
+      "ci95": [
+        0.014094896126320894,
+        0.02184438033400035
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.025182236302293826,
+        0.0207548794081521,
+        0.00766355672133065
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "onaxis/minus-explicit/0.1",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.00849763939886323,
+      "ci95": [
+        0.00325285528274122,
+        0.013814588302441016
+      ],
+      "p_randomization": 0.001999000499750125,
+      "per_seed_delta": [
+        0.03515072378510348,
+        -0.06270938299612228,
+        0.05305157740760849
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "onaxis/minus-none/0.3",
+      "p_holm": 0.047976011994003
+    },
+    {
+      "delta": 0.01487283725787475,
+      "ci95": [
+        0.010513861074193324,
+        0.019028744818807924
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.04080559415730284,
+        -0.005633061538399486,
+        0.009445979154720896
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "onaxis/minus-explicit/0.3",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.026269659817275748,
+      "ci95": [
+        0.021533818303005336,
+        0.030847095161287485
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.04504027634354485,
+        0.00972022382094323,
+        0.024048479287339164
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "onaxis/minus-none/1.0",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": -0.0035989256769040634,
+      "ci95": [
+        -0.008440966592782796,
+        0.001393027075052964
+      ],
+      "p_randomization": 0.1374312843578211,
+      "per_seed_delta": [
+        -0.04696414825158657,
+        0.028759342301943214,
+        0.007408028918931164
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "onaxis/minus-explicit/1.0",
+      "p_holm": 1.0
+    },
+    {
+      "delta": 0.03165824934075174,
+      "ci95": [
+        0.022166029630923092,
+        0.04040506157383657
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.02307162022696964,
+        0.04332618037971288,
+        0.028576947415572693
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "traditional/explicit-minus-biaffine",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.016873425084834803,
+      "ci95": [
+        0.007679343687686156,
+        0.02579792286825111
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.028940910927383837,
+        0.014473786101612832,
+        0.007205578225507742
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "traditional/explicit-minus-global_pointer",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.11773643324356324,
+      "ci95": [
+        0.10449773161275301,
+        0.13094999966380774
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.12396504139834406,
+        0.10833938860263145,
+        0.12090486972971423
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "traditional/explicit-minus-bert_crf",
+      "p_holm": 0.023488255872063966
+    },
+    {
+      "delta": 0.12696760252500558,
+      "ci95": [
+        0.11411885811324551,
+        0.13932387838247534
+      ],
+      "p_randomization": 0.0004997501249375312,
+      "per_seed_delta": [
+        0.12396504139834406,
+        0.13243577414480012,
+        0.12450199203187251
+      ],
+      "clusters": 300,
+      "evaluation_rows": 300,
+      "seeds": 3,
+      "replicates": 2000,
+      "scope": "fixed fitted models; normalized-text clusters; not independent training-seed inference",
+      "comparison": "traditional/explicit-minus-w2ner",
+      "p_holm": 0.023488255872063966
+    }
+  ],
+  "pending": [],
+  "planned_comparisons": 47
+}

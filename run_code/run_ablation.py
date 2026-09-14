@@ -16,7 +16,9 @@ from ontospan_experiment import (HFEncoder, StubEncoder, make_model, run_epoch,
                                  evaluate, read_jsonl, build_types, load_ontology,
                                  set_seed, mask_augment, free_memory, perturb_ontology, W_RELATED)
 
-MODE_TAG = {"none": "none (base)", "implicit": "implicit (3.5)", "explicit": "explicit (3.6)"}
+MODE_TAG = {"none": "none (base)", "implicit": "implicit (3.5)",
+            "explicit": "explicit (3.6)", "sgcn": "SGCN baseline",
+            "sigat": "SiGAT baseline"}
 
 
 def train_one(enc_factory, types, onto, mode, frac, seed,
@@ -28,7 +30,8 @@ def train_one(enc_factory, types, onto, mode, frac, seed,
     idx = list(range(len(train))); random.shuffle(idx)
     sub = [train[i] for i in idx[:n]]
     model = make_model(enc_factory, types, onto, mode, args.lmax, device, gnn_depth=args.gnn_depth,
-                       score_anchors=getattr(args, "score_anchors", False))
+                       score_anchors=getattr(args, "score_anchors", False),
+                       me_weight=getattr(args, "me_weight", 1.0))
     onto_lr = float(getattr(args, "onto_lr", 0) or 0)
     onto_scope = getattr(args, "onto_scope", "both")
     if onto_lr > 0:
@@ -69,11 +72,16 @@ def train_one(enc_factory, types, onto, mode, frac, seed,
             torch.save({"state_dict": best_state, "dev_f1": best_devF, "epoch": best_ep,
                         "types": types, "mode": mode}, ck)
             print(f"   saved best weights {ck} (dev-F1={best_devF:.4f} @ep{best_ep})")
-    tev = evaluate(model, test, device, bs=args.batch_size, use_amp=use_amp)
+    tev = evaluate(model, test, device, bs=args.batch_size, use_amp=use_amp,
+                   return_details=bool(getattr(args, "save_predictions", False)))
     tP, tR, tF = tev["micro"]
     print(f"   └─ test@best-dev(ep{best_ep}): P={tP:.4f}  R={tR:.4f}  F1={tF:.4f}")
-    return {"P": tP, "R": tR, "F1": tF, "dev_best_F1": best_devF, "best_epoch": best_ep,
-            "per_type": {l: list(v) for l, v in tev["per_type"].items()}}
+    out = {"seed": int(seed), "P": tP, "R": tR, "F1": tF,
+           "dev_best_F1": best_devF, "best_epoch": best_ep,
+           "per_type": {l: list(v) for l, v in tev["per_type"].items()}}
+    if "predictions" in tev:
+        out["predictions"] = tev["predictions"]
+    return out
 
 
 def summarize(res, modes, fracs, seeds):
@@ -150,8 +158,12 @@ def main():
     ap.add_argument("--aug-mask", type=float, default=0.0,
                     help="char random-masking probability (training set only; 0 = off)")
     ap.add_argument("--ckpt-dir", default=None, help="if set, save best-dev .pt weights to this directory")
-    ap.add_argument("--mutex-perturb", choices=["real", "rewired", "removed"], default="real",
+    ap.add_argument("--mutex-perturb", choices=["real", "rewired", "removed", "random_sign"], default="real",
                     help="P3 control: real / rewired / removed")
+    ap.add_argument("--me-weight", type=float, default=1.0,
+                    help="negative-message/implicit-ME weight")
+    ap.add_argument("--save-predictions", action="store_true",
+                    help="include per-sample gold/predicted spans in result JSON")
     ap.add_argument("--save-json", default=None)
     ap.add_argument("--score-anchors", action="store_true",
                     help="route instance anchors into span scoring (parent score = max(type, best anchor));"

@@ -1,0 +1,5 @@
+transformers==4.57.3
+numpy==2.2.6
+safetensors>=0.4,<1
+huggingface-hub>=0.34,<1
+pytorch-crf==0.7.2

@@ -1,4 +1,10 @@
-# 结果目录 & 跑器索引(单一真源说明)
+# 结果目录 & 跑器索引
+
+> **2026-09-14 更新：**返修后的 174/174 配置、47 项统一 Holm 校正统计和新增的
+> random-sign、第二 backbone、SGCN/SiGAT、lambda/ME-weight、uncapped、TCM
+> type-edge 与训练成本实验，以
+> [`result/revision_20260914/`](../result/revision_20260914/) 为当前论文数字真源。
+> 下方 2026-06-16 索引保留用于解释早期结果目录，不再覆盖返修结果。
 
 > 2026-06-16 整理。先前 `results/` 与 `results_3seed/` 共用 `{domain}_paper.json` 文件名、
 > 且 zip 多次解压产生过 ` 2` 副本目录,导致工具可能读到**过期单 seed** 数据。本文件钉死真源。

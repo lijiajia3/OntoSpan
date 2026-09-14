@@ -36,6 +36,8 @@ def worker(a):
     from ontospan_experiment import HFEncoder
     from run_ablation import train_one
     tr, dv, te, onto, types = _load_domain(a.domain, (a.train_cap, a.dev_cap, a.test_cap))
+    if getattr(a, "drop_instance_mutex", False):
+        onto = dict(onto); onto["imutex"] = []
     # Optionally inject a type-level mutex: all type pairs, flip attract->mutex, or explicit pairs.
     tmx = getattr(a, "type_mutex", None)
     if tmx:
@@ -55,9 +57,9 @@ def worker(a):
 
     class Cfg: pass
     cfg = Cfg()
-    for k in ("lmax", "lr", "lam", "gamma", "gnn_depth", "rho", "batch_size", "epochs", "accum", "aug_mask", "mutex_perturb", "onto_lr", "onto_scope", "score_anchors"):
+    for k in ("lmax", "lr", "lam", "gamma", "gnn_depth", "rho", "batch_size", "epochs", "accum", "aug_mask", "mutex_perturb", "onto_lr", "onto_scope", "score_anchors", "me_weight", "save_predictions"):
         setattr(cfg, k, getattr(a, k, None))
-    cfg.amp = bool(getattr(a, "amp", False)); cfg.ckpt_dir = None
+    cfg.amp = bool(getattr(a, "amp", False)); cfg.ckpt_dir = getattr(a, "ckpt_dir", None)
     r = train_one(lambda: HFEncoder(a.encoder), types, onto, a.mode, a.frac, a.seed,
                   tr, dv, te, cfg, dev, tag=a.domain)
     json.dump(r, open(a.out, "w", encoding="utf-8"), ensure_ascii=False)
@@ -83,12 +85,16 @@ def driver(a):
                            "--epochs", str(a.epochs), "--batch-size", str(a.batch_size), "--accum", str(a.accum),
                            "--train-cap", str(a.train_cap), "--dev-cap", str(a.dev_cap), "--test-cap", str(a.test_cap),
                            "--lr", str(a.lr), "--lmax", str(a.lmax), "--lam", str(a.lam), "--gamma", str(a.gamma),
+                           "--me-weight", str(a.me_weight),
                            "--gnn-depth", str(a.gnn_depth), "--rho", str(a.rho), "--aug-mask", str(a.aug_mask),
                            "--encoder", a.encoder]
                     cmd += ["--mutex-perturb", a.mutex_perturb]
                     if getattr(a, "onto_lr", 0): cmd += ["--onto-lr", str(a.onto_lr), "--onto-scope", a.onto_scope]
                     if getattr(a, "score_anchors", False): cmd += ["--score-anchors"]
                     if getattr(a, "type_mutex", None): cmd += ["--type-mutex", a.type_mutex]
+                    if getattr(a, "drop_instance_mutex", False): cmd += ["--drop-instance-mutex"]
+                    if getattr(a, "save_predictions", False): cmd += ["--save-predictions"]
+                    if getattr(a, "ckpt_dir", None): cmd += ["--ckpt-dir", a.ckpt_dir]
                     if a.device: cmd += ["--device", a.device]
                     if a.amp: cmd += ["--amp"]
                     print(f"  → [{domain} frac={frac} {mode} seed={seed}] subprocess …", flush=True)
@@ -105,7 +111,8 @@ def driver(a):
                            "lr": a.lr, "lam": a.lam, "gamma": a.gamma, "gnn_depth": a.gnn_depth, "rho": a.rho,
                            "lmax": a.lmax, "train_cap": a.train_cap, "dev_cap": a.dev_cap, "test_cap": a.test_cap,
                            "encoder": a.encoder, "accum": a.accum, "aug_mask": a.aug_mask, "batch_size": a.batch_size,
-                           "mutex_perturb": a.mutex_perturb},
+                           "mutex_perturb": a.mutex_perturb, "me_weight": a.me_weight,
+                           "save_predictions": bool(a.save_predictions)},
                 "elapsed_min": round((time.time() - t0) / 60, 2), "results": results}
         path = os.path.join(a.save_dir, f"{domain}_paper.json")
         json.dump(meta, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
@@ -137,8 +144,14 @@ def main():
                          "or '中药:方剂,症状:证候' for specific pairs. default = original ontology.")
     ap.add_argument("--encoder", default="hfl/chinese-macbert-base"); ap.add_argument("--device", default=None)
     ap.add_argument("--amp", action="store_true", help="CUDA AMP (fp16); ignored on non-CUDA devices")
-    ap.add_argument("--mutex-perturb", choices=["real", "rewired", "removed"], default="real",
+    ap.add_argument("--mutex-perturb", choices=["real", "rewired", "removed", "random_sign"], default="real",
                     help="P3 control: real / rewired (random-rewire mutex edges) / removed")
+    ap.add_argument("--me-weight", type=float, default=1.0,
+                    help="negative-message/implicit-ME weight")
+    ap.add_argument("--save-predictions", action="store_true")
+    ap.add_argument("--ckpt-dir", default=None)
+    ap.add_argument("--drop-instance-mutex", action="store_true",
+                    help="remove instance ME while retaining ontology nodes configured elsewhere")
     ap.add_argument("--save-dir", default=os.path.join(_HERE, "results_scratch"),
                     help="output dir for standalone driver mode; default results_scratch (temporary)")
     a = ap.parse_args()

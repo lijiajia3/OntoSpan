@@ -1,0 +1,10 @@
+{
+  "git_reference": "f020ba916f8682fcc0430d524a4ec54871fa2b61",
+  "original_sha256": {
+    "run_code/ontospan_experiment.py": "a0fa317d3d8c7bd2615772c6f3a6710b10ae1ce6661f282c2f5f438ff531c7ca",
+    "run_code/baselines.py": "214ae2da8fce8d1651bd7b99bfc6fa4b2791fbfb7ebb6f369b2dc69caa69d5be",
+    "build_datasets.py": "a00cbfc695360ad614d6a434af80a0c7529f994e6702c21ead12797fac3bca8f"
+  },
+  "signed_adaptation_source": "windows_full_runner_v11/run_code/ontospan_experiment.py",
+  "signed_source_sha256": "9dfd196deba866b0294ec04c97ca3b947783efe029ac12ccab8bab48b8753c8d"
+}
